@@ -75,7 +75,16 @@ int main (int argc, char *argv [])
         return -1;
     }
 
+	void* poller = zmq_poller_new();
+	zmq_poller_add(poller, s, NULL, ZMQ_POLLIN);
+
     for (i = 0; i != roundtrip_count; i++) {
+
+		zmq_poller_event_t  t;
+		zmq_poller_wait(poller, &t, -1);
+		if (t.socket != s)
+			printf("non sense");
+
         rc = zmq_recvmsg (s, &msg, 0);
         if (rc < 0) {
             printf ("error in zmq_recvmsg: %s\n", zmq_strerror (errno));
@@ -97,7 +106,7 @@ int main (int argc, char *argv [])
         printf ("error in zmq_msg_close: %s\n", zmq_strerror (errno));
         return -1;
     }
-
+	zmq_poller_destroy(&poller);
     zmq_sleep (1);
 
     rc = zmq_close (s);

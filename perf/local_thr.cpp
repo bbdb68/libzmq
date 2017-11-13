@@ -111,9 +111,19 @@ int main (int argc, char *argv [])
         return -1;
     }
 
+	void* poller = zmq_poller_new();
+	zmq_poller_add(poller, s, NULL, ZMQ_POLLIN);
+
     watch = zmq_stopwatch_start ();
 
     for (i = 0; i != message_count - 1; i++) {
+
+		zmq_poller_event_t  t;
+		zmq_poller_wait(poller, &t, -1);
+		if (t.socket != s)
+			printf("non sense");
+		
+
         rc = zmq_recvmsg (s, &msg, 0);
         if (rc < 0) {
             printf ("error in zmq_recvmsg: %s\n", zmq_strerror (errno));
@@ -128,6 +138,8 @@ int main (int argc, char *argv [])
     elapsed = zmq_stopwatch_stop (watch);
     if (elapsed == 0)
         elapsed = 1;
+
+	zmq_poller_destroy(&poller);
 
     rc = zmq_msg_close (&msg);
     if (rc != 0) {
